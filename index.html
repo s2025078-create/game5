@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>賭博網</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --panel-bg: #131b2e;
+            --panel-border: #1f2d4a;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-crimson: #991b1b;
+            --accent-gold: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .login-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg-dark) 80%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: var(--panel-bg);
+            border: 1px solid #312e81;
+            border-radius: 14px;
+            padding: 2rem;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+        }
+
+        .login-card h2 {
+            text-align: center;
+            color: var(--accent-gold);
+            margin-bottom: 0.4rem;
+            font-size: 1.6rem;
+        }
+
+        .login-card p.subtitle {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.45rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-tab {
+            padding: 0.65rem 0.4rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--panel-border);
+            color: var(--text-sub);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .role-tab.active {
+            background: #1e1b4b;
+            border-color: var(--accent-blue);
+            color: var(--text-main);
+        }
+
+        .login-form {
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .login-form.active {
+            display: flex;
+        }
+
+        header {
+            background: linear-gradient(180deg, #1e1b4b 0%, var(--bg-dark) 100%);
+            padding: 1.2rem 1.5rem;
+            border-bottom: 2px solid #312e81;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            color: var(--accent-red);
+            font-size: 1.6rem;
+            letter-spacing: 1px;
+        }
+
+        .header-title p {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .user-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: var(--panel-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .badge-role {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .badge-user { background: var(--accent-blue); color: #fff; }
+        .badge-admin { background: var(--accent-purple); color: #fff; }
+
+        .btn-logout {
+            background: #334155;
+            color: #fff;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover { background: var(--accent-red); }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-sub);
+            margin-bottom: 0.4rem;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            font-weight: bold;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 0.45rem;
+            background-color: #0d1322;
+            padding: 0.75rem;
+            flex-wrap: wrap;
+            border-top: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--text-sub);
+            padding: 0.55rem 0.9rem;
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--text-main);
+            background: #1e293b;
+            border-color: var(--accent-blue);
+        }
+
+        .nav-btn.active {
+            border-bottom: 3px solid var(--accent-gold);
+            background: #1e1b4b;
+        }
+
+        .nav-btn.loan-tab {
+            border-color: var(--accent-gold);
+            color: #fde68a;
+        }
+
+        .nav-btn.repay-tab {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+        }
+
+        .nav-btn.organ-tab {
+            border-color: #dc2626;
+            background: rgba(153, 27, 27, 0.25);
+            color: #fecaca;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .admin-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .admin-panel h2 {
+            color: var(--accent-purple);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .remote-code-box {
+            background: var(--bg-dark);
+            border: 1px solid #312e81;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-top: 0.8rem;
+        }
+
+        .decoded-report {
+            background: rgba(153, 27, 27, 0.18);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+            line-height: 1.6;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.85rem;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        th {
+            background: var(--bg-dark);
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .risk-tag {
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .risk-low { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .risk-mid { background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); }
+        .risk-high { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .risk-dead { background: #7f1d1d; color: #fecaca; border: 1px solid #ef4444; }
+
+        .btn-sm {
+            padding: 0.35rem 0.65rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            margin-right: 0.3rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .game-title {
+            font-size: 1.35rem;
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        input, select, button {
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--panel-border);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-bet { background-color: var(--accent-red); color: white; border: none; }
+        .btn-bet:hover { background-color: #dc2626; }
+        .btn-loan { background-color: var(--accent-gold); color: black; border: none; }
+        .btn-loan:hover { background-color: #d97706; }
+        .btn-repay { background-color: var(--accent-green); color: #052e16; border: none; }
+        .btn-repay:hover { background-color: #059669; color: #fff; }
+        .btn-primary { background-color: var(--accent-blue); color: white; border: none; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-day { background-color: var(--accent-blue); color: white; border: none; width: 100%; margin-top: 1rem; }
+
+        .game-display {
+            background: var(--bg-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            border: 1px dashed var(--panel-border);
+        }
+
+        .debt-summary-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .debt-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .debt-box.shark {
+            border-color: #7f1d1d;
+            background: rgba(127, 29, 29, 0.15);
+        }
+
+        .debt-box.cash-box {
+            border-color: #065f46;
+            background: rgba(6, 95, 70, 0.15);
+        }
+
+        .organ-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .organ-card {
+            background: var(--bg-dark);
+            border: 1px solid #450a0a;
+            border-radius: 10px;
+            padding: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.6rem;
+        }
+
+        .organ-card.fatal {
+            border: 1px solid var(--accent-red);
+            background: linear-gradient(180deg, #1f090d 0%, var(--bg-dark) 100%);
+        }
+
+        .organ-card.sold {
+            opacity: 0.5;
+            border-color: #334155;
+        }
+
+        .organ-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.05rem;
+        }
+
+        .organ-price {
+            color: var(--accent-green);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .organ-consequence {
+            font-size: 0.82rem;
+            color: #fca5a5;
+            line-height: 1.4;
+        }
+
+        .slot-wheels { display: flex; gap: 1rem; font-size: 3.5rem; }
+        .roulette-wheel { font-size: 2.5rem; font-weight: bold; }
+        .card-hand { display: flex; gap: 0.5rem; font-size: 2rem; }
+
+        .gacha-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.6rem;
+            width: 100%;
+            margin-top: 0.8rem;
+        }
+
+        .gacha-card-item {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 0.6rem 0.4rem;
+            font-size: 0.82rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .gacha-card-item.rarity-ur {
+            border: 2px solid var(--accent-gold);
+            background: linear-gradient(135deg, #422006, #131b2e);
+            color: #fde047;
+        }
+
+        .gacha-card-item.rarity-sr { border: 1px solid var(--accent-purple); color: #d8b4fe; }
+        .gacha-card-item.rarity-r { color: var(--text-sub); }
+        .gacha-badge { font-size: 0.7rem; font-weight: bold; padding: 0.1rem 0.4rem; border-radius: 4px; background: rgba(255,255,255,0.1); }
+
+        .lottery-balls { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+        .ball {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+            color: #000; font-weight: bold; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ball.hit { background: linear-gradient(135deg, #10b981, #047857); color: #fff; border: 2px solid #fff; }
+        .number-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem;
+            background: var(--bg-dark); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--panel-border);
+        }
+        .num-btn {
+            padding: 0.45rem 0; font-size: 0.85rem; background: var(--panel-bg);
+            border: 1px solid var(--panel-border); color: var(--text-sub); border-radius: 4px; cursor: pointer;
+        }
+        .num-btn.selected { background: var(--accent-red); color: #fff; border-color: #fca5a5; font-weight: bold; }
+
+        .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+        .log-box {
+            background: var(--panel-bg); border: 1px solid var(--panel-border);
+            border-radius: 12px; padding: 1.2rem; flex: 1; display: flex; flex-direction: column;
+        }
+        .log-box h3 { font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 0.8rem; }
+        .logs-container {
+            background: var(--bg-dark); border-radius: 6px; padding: 0.8rem;
+            flex: 1; max-height: 520px; overflow-y: auto; font-size: 0.85rem; border: 1px solid var(--panel-border);
+        }
+        .log-item { padding: 0.4rem 0; border-bottom: 1px solid #1e293b; }
+        .log-item.danger { color: var(--accent-red); }
+        .log-item.warning { color: var(--accent-gold); }
+        .log-item.success { color: var(--accent-green); }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92); justify-content: center; align-items: center; z-index: 9999; padding: 1rem;
+        }
+        .modal-content {
+            background: var(--panel-bg); padding: 2rem; border-radius: 12px;
+            max-width: 620px; width: 100%; border: 2px solid var(--accent-red); text-align: center;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-content h2 { color: var(--accent-red); font-size: 1.7rem; margin-bottom: 1rem; }
+        .guidance-list {
+            text-align: left; background: var(--bg-dark); padding: 1rem 1.5rem;
+            border-radius: 8px; margin: 1rem 0; border-left: 4px solid var(--accent-red);
+        }
+        .guidance-list li { margin-bottom: 0.55rem; font-size: 0.9rem; color: var(--text-sub); }
+        .guidance-list strong { color: var(--text-main); }
+
+        .code-box {
+            background: #050811;
+            border: 1px dashed var(--accent-gold);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.88rem;
+            color: #fde047;
+            word-break: break-all;
+            margin: 0.6rem 0;
+            user-select: all;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 登入驗證畫面 -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <h2>賭博網</h2>
+            <p class="subtitle">全項目賭博</p>
+
+            <div class="role-tabs">
+                <div class="role-tab active" id="tab-role-user" onclick="switchLoginRole('user')">👤 客戶登入</div>
+                <div class="role-tab" id="tab-role-admin1" onclick="switchLoginRole('admin1')">🛡️ 管理員 1</div>
+                <div class="role-tab" id="tab-role-admin2" onclick="switchLoginRole('admin2')">🛡️ 管理員 2</div>
+            </div>
+
+            <!-- 客戶登入表單 -->
+            <div class="login-form active" id="form-user-login">
+                <div class="form-group">
+                    <label>用家帳號</label>
+                    <input type="text" id="input-username" placeholder="請輸入您的名字或編號" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>登入密碼（首次輸入將自動建立新帳號）</label>
+                    <input type="password" id="input-userpass" placeholder="請輸入密碼" autocomplete="new-password">
+                </div>
+                <button class="btn-primary" onclick="loginAsUser()">進入防賭博模擬器</button>
+            </div>
+
+            <!-- 管理員 1 登入表單 -->
+            <div class="login-form" id="form-admin1-login">
+                <div class="form-group">
+                    <label>管理員 1 帳號</label>
+                    <input type="text" id="input-admin1name" placeholder="請輸入管理員 1 帳號" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>管理員 1 密碼</label>
+                    <input type="password" id="input-admin1pass" placeholder="請輸入管理員 1 密碼" autocomplete="new-password">
+                </div>
+                <button class="btn-loan" onclick="loginAsAdmin('admin1')">登入管理員 1 監控後台</button>
+            </div>
+
+            <!-- 管理員 2 登入表單 -->
+            <div class="login-form" id="form-admin2-login">
+                <div class="form-group">
+                    <label>管理員 2 帳號</label>
+                    <input type="text" id="input-admin2name" placeholder="請輸入管理員 2 帳號" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>管理員 2 密碼</label>
+                    <input type="password" id="input-admin2pass" placeholder="請輸入管理員 2 密碼" autocomplete="new-password">
+                </div>
+                <button class="btn-loan" onclick="loginAsAdmin('admin2')">登入管理員 2 監控後台</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頂部導覽列 -->
+    <header>
+        <div class="header-title">
+            <h1>賭博網</h1>
+            <p>全項目賭博</p>
+        </div>
+        <div class="user-bar" id="user-bar" style="display: none;">
+            <span class="badge-role badge-user" id="display-role-badge">客戶帳號</span>
+            <strong id="display-current-user">未登入</strong>
+            <button class="btn-logout" onclick="logout()">登出 / 切換帳號</button>
+        </div>
+    </header>
+
+    <!-- ==================== 管理員監控後台 ==================== -->
+    <div class="admin-container" id="admin-view">
+        <!-- 跨裝置玩家狀態檢查與遠端復活產生器 -->
+        <div class="admin-panel" style="border-color: var(--accent-gold);">
+            <h2>📲 跨裝置玩家狀態查看 & 遠端復活解鎖器（任何裝置皆可使用）</h2>
+            <p style="color: var(--text-sub); font-size: 0.9rem; line-height: 1.5;">
+                當使用<strong>其他手機或電腦</strong>的玩家購買器官死亡（或需要匯報現況）時，請對方複製畫面上的<strong>「狀態回報識別碼」</strong>傳給您並貼入下方，即可在您的裝置查看他的完整負債/器官狀態，並產生<strong>「專屬復活解鎖碼」</strong>讓他重置復活：
+            </p>
+            <div class="remote-code-box">
+                <div class="controls-grid" style="margin-bottom: 0.5rem; align-items: end;">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>貼上玩家傳來的「狀態回報識別碼」</label>
+                        <input type="text" id="admin-import-code" placeholder="例如：SIM-eyJ1Ijoi...">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn-loan" onclick="decodePlayerStatusCode()">🔍 查看玩家現況並產生復活碼</button>
+                    </div>
+                </div>
+
+                <!-- 解析出來的玩家詳情與復活碼 -->
+                <div class="decoded-report" id="admin-decoded-report">
+                    <h3 style="color: var(--accent-gold); margin-bottom: 0.5rem;">📋 跨裝置玩家狀態報告</h3>
+                    <div id="decoded-player-details" style="font-size: 0.92rem; color: var(--text-main);"></div>
+                    <div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed #7f1d1d;">
+                        <strong style="color: var(--accent-green);">✅ 專屬復活解鎖碼（請複製傳給該玩家輸入）：</strong>
+                        <div class="code-box" id="generated-revive-code"></div>
+                        <button class="btn-repay btn-sm" onclick="copyTextFromEl('generated-revive-code')">📋 一鍵複製復活解鎖碼</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 目前登入的管理員自訂修改自己帳號密碼面板 -->
+        <div class="admin-panel">
+            <h2 id="admin-security-title">🔐 管理員安全設定（更改目前管理員登入帳號與密碼）</h2>
+            <div class="controls-grid" style="margin-bottom: 0; align-items: end;">
+                <div class="form-group">
+                    <label>新的管理員帳號</label>
+                    <input type="text" id="new-admin-user" placeholder="輸入新帳號">
+                </div>
+                <div class="form-group">
+                    <label>新的管理員密碼</label>
+                    <input type="password" id="new-admin-pass" placeholder="輸入新密碼">
+                </div>
+                <div class="form-group">
+                    <button class="btn-primary" onclick="updateAdminCredentials()">儲存新帳號密碼</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 本機裝置帳號列表 -->
+        <div class="admin-panel">
+            <h2>
+                <span>💻 本機裝置用家帳號監控表</span>
+                <button class="btn-primary btn-sm" onclick="renderAdminDashboard()">🔄 刷新本機數據</button>
+            </h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用家帳號</th>
+                            <th>模擬天數</th>
+                            <th>目前現金</th>
+                            <th>銀行貸款</th>
+                            <th>地下高利貸</th>
+                            <th>身體健康上限</th>
+                            <th>已典當器官</th>
+                            <th>生命狀態</th>
+                            <th>管理員操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-tbody">
+                        <tr><td colspan="9" style="text-align:center; color: var(--text-sub);">本機尚無用家數據</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 用家模擬器主畫面 ==================== -->
+    <div id="user-view" style="display: none; flex-direction: column; flex: 1;">
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-label">目前現金</div>
+                <div class="stat-value" id="val-cash" style="color: var(--accent-green);">$10,000</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">總負債 (高利貸/銀行)</div>
+                <div class="stat-value" id="val-debt" style="color: var(--accent-red);">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">每日滾雪球利息</div>
+                <div class="stat-value" id="val-interest" style="color: var(--accent-gold);">$0 /天</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">身心健康 (上限: <span id="val-max-health">100</span>%)</div>
+                <div class="stat-value" id="val-health">100%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">模擬進行天數</div>
+                <div class="stat-value" id="val-day">第 1 天</div>
+            </div>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('tab-sports', this)">⚽ 全球足球</button>
+            <button class="nav-btn" onclick="switchTab('tab-basketball', this)">🏀 全球籃球/NBA</button>
+            <button class="nav-btn" onclick="switchTab('tab-stocks', this)">📈 短線炒股/高倍槓桿</button>
+            <button class="nav-btn" onclick="switchTab('tab-baccarat', this)">🎴 百家樂</button>
+            <button class="nav-btn" onclick="switchTab('tab-dice', this)">🎲 骰子/大小</button>
+            <button class="nav-btn" onclick="switchTab('tab-roulette', this)">🎡 輪盤</button>
+            <button class="nav-btn" onclick="switchTab('tab-slots', this)">🎰 老虎機</button>
+            <button class="nav-btn" onclick="switchTab('tab-lottery', this)">🎟️ 六合彩</button>
+            <button class="nav-btn" onclick="switchTab('tab-gacha', this)">📦 抽卡/開箱/盲盒</button>
+            <button class="nav-btn loan-tab" onclick="switchTab('tab-loan', this)">⚠️ 借錢 / 地下錢莊</button>
+            <button class="nav-btn repay-tab" onclick="switchTab('tab-repay', this)">✅ 還錢 / 償還債務</button>
+            <button class="nav-btn organ-tab" onclick="switchTab('tab-organ', this)">🩸 地下黑市 (器官典當)</button>
+        </nav>
+
+        <main>
+            <div class="content-area">
+                <!-- 1. 全球足球 -->
+                <div id="tab-sports" class="tab-content active">
+                    <div class="game-title">
+                        <span>全球足球賽事投注 (完全隨機 50/50/Draw)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">抽水賠率: 1.90</span>
+                    </div>
+                    <div class="game-display" id="disp-sports">
+                        <h2 id="sports-matchup">🇦🇷 阿根廷 vs 🇧🇷 巴西</h2>
+                        <p style="margin-top: 0.5rem; color: var(--text-sub);" id="sports-score">比分：0 - 0</p>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇聯賽 / 國家隊</label>
+                            <select id="sports-league" onchange="updateSportsTeams()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>主隊</label>
+                            <select id="sports-team1" onchange="updateSportsBanner()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>客隊</label>
+                            <select id="sports-team2" onchange="updateSportsBanner()"></select>
+                        </div>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>投注項目</label>
+                            <select id="sports-pick">
+                                <option value="A">主隊勝 (賠率 1.90)</option>
+                                <option value="B">客隊勝 (賠率 1.90)</option>
+                                <option value="D">平局 (賠率 3.10)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>下注金額 ($)</label>
+                            <input type="number" id="sports-amount" value="1000" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playSports()">進行足球投注</button>
+                </div>
+
+                <!-- 1B. 全球籃球 / NBA -->
+                <div id="tab-basketball" class="tab-content">
+                    <div class="game-title">
+                        <span>全球籃球賽事投注 (NBA / FIBA 國家隊)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">完全隨機勝負 (無平局 / 抽水賠率 1.90)</span>
+                    </div>
+                    <div class="game-display">
+                        <h2 id="bball-matchup">🟡🟣 洛杉磯湖人 vs 🔵🟡 金州勇士</h2>
+                        <p style="margin-top: 0.5rem; color: var(--text-sub);" id="bball-score">比分：0 - 0（籃球高比分隨機模擬）</p>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇籃球聯賽 / 國際賽</label>
+                            <select id="bball-league" onchange="updateBballTeams()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>主隊</label>
+                            <select id="bball-team1" onchange="updateBballBanner()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>客隊</label>
+                            <select id="bball-team2" onchange="updateBballBanner()"></select>
+                        </div>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>投注獨贏盤</label>
+                            <select id="bball-pick">
+                                <option value="A">主隊勝 (賠率 1.90)</option>
+                                <option value="B">客隊勝 (賠率 1.90)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>下注金額 ($)</label>
+                            <input type="number" id="bball-amount" value="1000" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playBasketball()">進行籃球投注</button>
+                </div>
+
+                <!-- 1C. 高風險短線炒股 / 槓桿期權 -->
+                <div id="tab-stocks" class="tab-content">
+                    <div class="game-title">
+                        <span>高風險投機炒股 / 槓桿期權 (賭博化交易陷阱)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">警惕：把股市當賭場極易爆倉歸零</span>
+                    </div>
+                    <div class="game-display">
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="disp-stock-ticker">科技妖股 (NVDA-X) | 價格：$100.00</div>
+                        <p style="margin-top: 0.5rem; font-size: 0.95rem;" id="disp-stock-result">選擇標的與槓桿倍數，體驗「做多 / 做空」劇烈波動</p>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇高波動投機標的</label>
+                            <select id="stock-symbol" onchange="updateStockBanner()">
+                                <option value="AI科技概念股 (波動 ±12%)">AI 科技概念股 (波動 ±12%)</option>
+                                <option value="迷因妖股 / 仙股 (波動 ±35%)">迷因妖股 / 仙股 (波動 ±35%)</option>
+                                <option value="加密貨幣概念股 (波動 ±25%)">加密貨幣概念股 (波動 ±25%)</option>
+                                <option value="生技新藥股 (解盲成敗 ±50%)">生技新藥股 (解盲成敗 ±50%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>槓桿倍數 / 衍生品風險</label>
+                            <select id="stock-leverage">
+                                <option value="1">1倍 現股買賣 (低槓桿)</option>
+                                <option value="10">10倍 融資槓桿 (虧損達10%即爆倉歸零)</option>
+                                <option value="50">50倍 高倍期貨合約 (虧損2%直接強制平倉)</option>
+                                <option value="100">100倍 末日期權 (賭對翻倍、賭錯本金100%歸零)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>交易方向</label>
+                            <select id="stock-direction">
+                                <option value="long">📈 做多 (看漲 Buy / Long)</option>
+                                <option value="short">📉 做空 (看跌 Sell / Short)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>投入保證金 ($)</label>
+                            <input type="number" id="stock-amount" value="2000" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playStocks()">下單開倉 (體驗高槓桿波動)</button>
+                </div>
+
+                <!-- 2. 百家樂 -->
+                <div id="tab-baccarat" class="tab-content">
+                    <div class="game-title">
+                        <span>百家樂 (Baccarat)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">莊抽水 5%</span>
+                    </div>
+                    <div class="game-display">
+                        <div class="card-hand" id="disp-baccarat"><span>🂠 🂠</span> vs <span>🂠 🂠</span></div>
+                        <p style="margin-top: 0.5rem; color: var(--text-sub);">莊家 vs 閒家</p>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>投注對象</label>
+                            <select id="bac-pick">
+                                <option value="banker">莊家 (Banker - 賠率 1:0.95)</option>
+                                <option value="player">閒家 (Player - 賠率 1:1)</option>
+                                <option value="tie">和局 (Tie - 賠率 1:8)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>下注金額 ($)</label>
+                            <input type="number" id="bac-amount" value="1000" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playBaccarat()">開牌</button>
+                </div>
+
+                <!-- 3. 骰子 -->
+                <div id="tab-dice" class="tab-content">
+                    <div class="game-title">
+                        <span>骰子猜大小 (Sic Bo)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">圍骰通殺陷阱 (勝率 48.6%)</span>
+                    </div>
+                    <div class="game-display">
+                        <div style="font-size: 3rem;" id="disp-dice">🎲 🎲 🎲</div>
+                        <p style="margin-top: 0.5rem; color: var(--text-sub);" id="disp-dice-val">總點數: ?</p>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇大小</label>
+                            <select id="dice-pick">
+                                <option value="big">大 (11 - 17 點)</option>
+                                <option value="small">小 (4 - 10 點)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>下注金額 ($)</label>
+                            <input type="number" id="dice-amount" value="1000" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playDice()">搖骰子</button>
+                </div>
+
+                <!-- 4. 輪盤 -->
+                <div id="tab-roulette" class="tab-content">
+                    <div class="game-title">
+                        <span>輪盤 (Roulette)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">含 0 與 00 (莊家優勢 5.26%)</span>
+                    </div>
+                    <div class="game-display">
+                        <div class="roulette-wheel" id="disp-roulette">🎡 [ 00 ]</div>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>投注類型</label>
+                            <select id="rou-pick">
+                                <option value="red">紅 (Red - 1:1)</option>
+                                <option value="black">黑 (Black - 1:1)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>下注金額 ($)</label>
+                            <input type="number" id="rou-amount" value="1000" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playRoulette()">旋轉輪盤</button>
+                </div>
+
+                <!-- 5. 老虎機 -->
+                <div id="tab-slots" class="tab-content">
+                    <div class="game-title">
+                        <span>老虎機 (Slot Machine)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">返還率 (RTP) 僅 85%</span>
+                    </div>
+                    <div class="game-display">
+                        <div class="slot-wheels" id="disp-slots">🍒 🍋 🔔</div>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>單次拉角金額 ($)</label>
+                            <input type="number" id="slot-amount" value="500" min="100">
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playSlots()">拉動桿子 (Spin)</button>
+                </div>
+
+                <!-- 6. 六合彩 -->
+                <div id="tab-lottery" class="tab-content">
+                    <div class="game-title">
+                        <span>六合彩 (1 - 49 選 6 個號碼)</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">頭獎機率: 1 / 13,983,816</span>
+                    </div>
+                    <div class="game-display">
+                        <div style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 0.5rem;">本期開獎號碼（綠色為命中）：</div>
+                        <div class="lottery-balls" id="disp-lottery">
+                            <span class="ball">?</span><span class="ball">?</span><span class="ball">?</span>
+                            <span class="ball">?</span><span class="ball">?</span><span class="ball">?</span>
+                        </div>
+                        <p style="margin-top: 0.8rem; font-size: 0.9rem; color: var(--accent-gold);" id="lottery-picked-display">
+                            已選號碼：尚未選滿 6 個 (0/6)
+                        </p>
+                    </div>
+                    <div class="number-grid" id="lottery-grid"></div>
+                    <div class="controls-grid" style="margin-top: 1rem;">
+                        <div class="form-group">
+                            <label>每注金額 ($)</label>
+                            <input type="number" id="lottery-bet" value="100" min="10">
+                        </div>
+                        <div class="form-group" style="justify-content: flex-end;">
+                            <button type="button" class="btn-loan" onclick="quickPickLottery()">🎲 電腦隨機快選 6 個號碼</button>
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" onclick="playLottery()">確認下注並開獎</button>
+                </div>
+
+                <!-- 7. 全類型抽卡 -->
+                <div id="tab-gacha" class="tab-content">
+                    <div class="game-title">
+                        <span>全類型抽卡 / 集換式卡包 / 開箱模擬</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);" id="gacha-rate-tag">SSR/UR 機率 0.6%</span>
+                    </div>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇抽卡 / 開箱類型</label>
+                            <select id="gacha-pool-type" onchange="updateGachaPoolInfo()">
+                                <option value="rpg_gacha">1. 二次元手遊限定角色池 (10連抽 $1,500)</option>
+                                <option value="tcg_pack">2. 實體集換式卡牌包 TCG (5張一包 $300)</option>
+                                <option value="sports_card">3. 球星簽名鑑定卡盲盒 (一盒 $3,000)</option>
+                                <option value="fps_crate">4. 射擊遊戲武器造型箱 (5連開 $1,000)</option>
+                                <option value="blind_box">5. 潮流公仔盲盒端盒 (6連抽 $1,800)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="game-display">
+                        <div style="font-size: 1.1rem; font-weight: bold; color: var(--accent-gold);" id="gacha-pool-title">
+                            【二次元手遊限定角色池】抽卡結果：
+                        </div>
+                        <p style="margin-top: 0.3rem; font-size: 0.85rem; color: var(--text-sub);" id="disp-gacha-stats">
+                            累積抽數：0 抽 | 距離保底還差：90 抽 | 累積沉沒花費：$0
+                        </p>
+                        <div class="gacha-results-grid" id="disp-gacha-grid">
+                            <div class="gacha-card-item">
+                                <span class="gacha-badge">待抽取</span>
+                                <span>點擊下方按鈕開始抽卡</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-bet" style="width: 100%;" id="btn-gacha-pull" onclick="playGacha()">進行抽卡 / 開箱 ($1,500)</button>
+                </div>
+
+                <!-- 8. 借錢與高利貸 -->
+                <div id="tab-loan" class="tab-content">
+                    <div class="game-title">
+                        <span style="color: var(--accent-red);">⚠️ 申請借款與地下錢莊陷阱</span>
+                    </div>
+                    <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                        當您輸光本金，想要「借錢翻本」、「借錢補倉」或「借錢課金抽卡」時，高利貸每日 10% 複利會讓債務在短短一週內翻倍。如需還債請切換至「✅ 還錢 / 償還債務」分頁。
+                    </p>
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇借款管道</label>
+                            <select id="loan-type">
+                                <option value="bank">正則銀行貸款 (日利息 0.5%，限額 $5,000)</option>
+                                <option value="shark">地下錢莊 / 高利貸 (日利息 10% 複利，無上限)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>借款金額 ($)</label>
+                            <input type="number" id="loan-amount" value="10000" min="1000">
+                        </div>
+                    </div>
+                    <button class="btn-loan" style="width: 100%;" onclick="takeLoan()">簽約借款 (拿取翻本資金)</button>
+                </div>
+
+                <!-- 8B. 獨立還錢 / 償還債務分頁 -->
+                <div id="tab-repay" class="tab-content">
+                    <div class="game-title">
+                        <span style="color: var(--accent-green);">✅ 償還欠款（還錢與清債管理）</span>
+                        <span style="font-size: 0.8rem; color: var(--text-sub);">及早清償高利貸以停止複利膨脹</span>
+                    </div>
+
+                    <div class="debt-summary-bar">
+                        <div class="debt-box cash-box">
+                            <span style="font-size: 0.82rem; color: #6ee7b7;">目前可用於還款現金</span>
+                            <strong style="font-size: 1.35rem; color: var(--accent-green);" id="repay-available-cash">$10,000</strong>
+                        </div>
+                        <div class="debt-box">
+                            <span style="font-size: 0.82rem; color: var(--text-sub);">正則銀行貸款餘額 (日息 0.5%)</span>
+                            <strong style="font-size: 1.35rem; color: var(--accent-blue);" id="detail-bank-debt">$0</strong>
+                        </div>
+                        <div class="debt-box shark">
+                            <span style="font-size: 0.82rem; color: #fca5a5;">地下錢莊高利貸餘額 (日息 10%)</span>
+                            <strong style="font-size: 1.35rem; color: var(--accent-red);" id="detail-shark-debt">$0</strong>
+                        </div>
+                    </div>
+
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label>選擇要償還的債務對象</label>
+                            <select id="repay-type">
+                                <option value="shark">優先償還：地下錢莊 / 高利貸 (日息 10%)</option>
+                                <option value="bank">償還：正則銀行貸款 (日息 0.5%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>輸入還款金額 ($)</label>
+                            <input type="number" id="repay-amount" value="5000" min="1">
+                        </div>
+                    </div>
+
+                    <div class="controls-grid">
+                        <button class="btn-repay" onclick="repayLoan('custom')">💵 償還指定金額</button>
+                        <button class="btn-loan" onclick="repayLoan('half_cash')">⚡ 用現有 50% 現金還債</button>
+                        <button class="btn-primary" onclick="repayLoan('full')">🏆 一鍵全額清償該項債務</button>
+                    </div>
+                </div>
+
+                <!-- 9. 地下黑市 / 身體器官典當 -->
+                <div id="tab-organ" class="tab-content">
+                    <div class="game-title">
+                        <span style="color: var(--accent-red);">🩸 地下黑市：人體器官買賣與生命代價警示</span>
+                        <span style="font-size: 0.8rem; color: #fca5a5;">極端債務逼迫下的不可逆悲劇</span>
+                    </div>
+                    <div style="background: rgba(153, 27, 27, 0.25); border-left: 4px solid var(--accent-red); padding: 0.9rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.88rem; color: #fecaca; line-height: 1.5;">
+                        <strong>教育警示：</strong> 當高利貸利息失控到幾十萬甚至上百萬時，現實中許多走投無路的賭徒會被黑市犯罪集團誘騙或脅迫簽下「器官賣身契」。<br>
+                        • 典當<strong>非維生器官</strong>將造成終身殘疾與健康上限永久暴跌；<br>
+                        • 典當<strong>重要維生器官</strong>將直接導致<strong>手術台死亡（生命終結）</strong>，再多金錢也無法換回性命！
+                    </div>
+                    <div class="organ-grid" id="organ-market-grid"></div>
+                </div>
+            </div>
+
+            <!-- 右側個人日誌 -->
+            <div class="sidebar">
+                <div class="log-box">
+                    <h3>個人行為與財務動態日誌</h3>
+                    <div class="logs-container" id="game-logs"></div>
+                    <button class="btn-day" onclick="nextDay()">結算至下一天 (算利息與追債)</button>
+                    <button class="btn-loan" style="width: 100%; margin-top: 0.6rem; background: #1e293b; color: #fde047; border: 1px solid #475569;" onclick="copyPlayerStatusReportCode()">📤 複製目前狀態識別碼（傳給管理員）</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 重要器官摘除導致生命終結教育彈窗（附跨裝置識別碼與輸入復活碼欄位） -->
+    <div class="modal" id="death-modal">
+        <div class="modal-content" style="border-color: #dc2626; background: #14070a;">
+            <h2 style="color: #ef4444; font-size: 1.8rem;">💀 生命終結：因賭債與非法器官摘除死亡</h2>
+            <p style="color: #fca5a5; font-size: 0.98rem; margin-bottom: 0.8rem;" id="death-reason-text">
+                您在地下黑市手術台上摘除了維生重要器官，生理機能瞬間衰竭，搶救無效死亡。
+            </p>
+            <div class="guidance-list">
+                <p style="color: var(--accent-gold); font-weight: bold; margin-bottom: 0.4rem;">給每一位參與者的沉痛反思：</p>
+                <ul>
+                    <li><strong>金錢歸零可以重來，生命歸零永遠無法重啟：</strong> 賭博與高利貸最可怕的地方，是讓人誤以為「只要再借一筆就能翻本」，最終把最寶貴的健康與生命當成籌碼。</li>
+                    <li><strong>沒有「必勝法」能戰勝複利高利貸：</strong> 10% 日息只需 7 天就會翻倍，任何賭局在數學期望值上都無法填補這種黑洞。</li>
+                </ul>
+            </div>
+
+            <!-- 跨裝置求助與復活解鎖區塊 -->
+            <div style="background: var(--bg-dark); border: 1px solid #312e81; border-radius: 8px; padding: 1rem; text-align: left; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: #93c5fd; font-weight: bold;">📲 若您在其他手機/電腦遊玩，請將下方識別碼傳給管理員：</p>
+                <div class="code-box" id="player-death-status-code"></div>
+                <button class="btn-primary btn-sm" style="width: 100%; margin-bottom: 0.8rem;" onclick="copyTextFromEl('player-death-status-code')">📋 複製狀態識別碼傳給管理員</button>
+
+                <label style="color: #6ee7b7; font-weight: bold;">輸入管理員提供的「專屬復活解鎖碼」：</label>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+                    <input type="text" id="player-input-revive-code" placeholder="貼上 REVIVE-... 解鎖碼" style="flex: 1;">
+                    <button class="btn-repay" onclick="redeemReviveCode()">確認復活</button>
+                </div>
+            </div>
+
+            <button class="btn-logout" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; background: #991b1b;" onclick="logout()">返回登入畫面</button>
+        </div>
+    </div>
+
+    <!-- 管理員查看單一用家日誌彈窗 -->
+    <div class="modal" id="admin-log-modal">
+        <div class="modal-content" style="border-color: var(--accent-purple); text-align: left;">
+            <h2 style="color: var(--accent-purple); font-size: 1.4rem;" id="admin-modal-title">用家行為明細</h2>
+            <div class="logs-container" id="admin-modal-logs" style="max-height: 350px; margin: 1rem 0;"></div>
+            <button class="btn-primary" style="width: 100%;" onclick="document.getElementById('admin-log-modal').style.display='none'">關閉視窗</button>
+        </div>
+    </div>
+
+    <script>
+        // ================= 本地資料庫與雙管理員獨立設定 =================
+        const STORAGE_KEY = 'anti_gambling_users_db_v1';
+        const ADMIN_STORAGE_KEY = 'anti_gambling_dual_admins_v1';
+        const REVIVE_SECRET_SALT = 'ANTI_GAMBLE_2026_OK';
+
+        // ⚠️ 請在下方引號 '' 內自行填入管理員 1 與管理員 2 的帳號及密碼（目前密碼欄位已為您留空）：
+        const DEFAULT_ADMINS = {
+            admin1: {
+                username: '623mmmmmm',
+                password: 'kc934474' // <-- 請在此輸入管理員 1 的密碼
+            },
+            admin2: {
+                username: 'Angusman',
+                password: 'mangus' // <-- 請在此輸入管理員 2 的密碼
+            }
+        };
+
+        let currentUser = null;
+        let currentAdminSlot = null; // 'admin1' 或 'admin2' 或 null
+        let isAdmin = false;
+
+        // Unicode 安全 Base64 編碼/解碼
+        function encodeBase64Unicode(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
+        }
+        function decodeBase64Unicode(str) {
+            return decodeURIComponent(Array.prototype.map.call(atob(str), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        }
+
+        // 產生玩家即時狀態識別碼（供跨裝置傳送給管理員查看）
+        function generatePlayerStatusCode() {
+            const payload = {
+                u: currentUser || '未命名客戶',
+                d: state.day,
+                c: state.cash,
+                b: state.bankLoan,
+                s: state.sharkLoan,
+                h: state.health,
+                mh: state.maxHealth,
+                o: state.soldOrgans || [],
+                dead: state.isDead ? 1 : 0,
+                r: state.deathReason || '',
+                t: Date.now()
+            };
+            return 'SIM-' + encodeBase64Unicode(JSON.stringify(payload));
+        }
+
+        function copyPlayerStatusReportCode() {
+            const code = generatePlayerStatusCode();
+            navigator.clipboard?.writeText(code).catch(() => {});
+            prompt('已產生您目前的完整財務與狀態識別碼，請複製傳給管理員：', code);
+        }
+
+        function copyTextFromEl(elId) {
+            const text = document.getElementById(elId).innerText;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('已成功複製到剪貼簿！請貼上傳送給對方。');
+                }).catch(() => {
+                    prompt('請手動全選複製下方代碼：', text);
+                });
+            } else {
+                prompt('請手動全選複製下方代碼：', text);
+            }
+        }
+
+        // 管理員解析玩家狀態識別碼並產生專屬復活碼
+        function decodePlayerStatusCode() {
+            const raw = document.getElementById('admin-import-code').value.trim();
+            if (!raw.startsWith('SIM-')) {
+                alert('識別碼格式不正確！請確認是否完整複製以 SIM- 開頭的代碼。');
+                return;
+            }
+            try {
+                const jsonStr = decodeBase64Unicode(raw.slice(4));
+                const data = JSON.parse(jsonStr);
+
+                const organNames = (data.o && data.o.length > 0)
+                    ? data.o.map(id => {
+                        const found = organCatalog.find(o => o.id === id);
+                        return found ? found.name : id;
+                    }).join('、')
+                    : '無';
+
+                const statusText = data.dead ? '💀 已死亡（摘除重要器官）' : '存活中';
+                const detailsHtml = `
+                    • <strong>玩家帳號：</strong> ${data.u}<br>
+                    • <strong>生命狀態：</strong> <span style="color:${data.dead ? '#ef4444' : '#10b981'}; font-weight:bold;">${statusText}</span>（進行至第 ${data.d} 天）<br>
+                    • <strong>現金 / 銀行貸款 / 地下高利貸：</strong> $${(data.c||0).toLocaleString()} / $${(data.b||0).toLocaleString()} / <span style="color:#ef4444; font-weight:bold;">$${(data.s||0).toLocaleString()}</span><br>
+                    • <strong>身心健康 / 上限：</strong> ${data.h}% / ${data.mh}%<br>
+                    • <strong>已典當器官：</strong> ${organNames}<br>
+                    ${data.r ? `• <strong>死亡原因：</strong> <span style="color:#fca5a5;">${data.r}</span>` : ''}
+                `;
+
+                document.getElementById('decoded-player-details').innerHTML = detailsHtml;
+
+                const reviveObj = {
+                    u: data.u,
+                    ts: data.t,
+                    sig: encodeBase64Unicode(data.u + '|' + REVIVE_SECRET_SALT)
+                };
+                const reviveCode = 'REVIVE-' + encodeBase64Unicode(JSON.stringify(reviveObj));
+                document.getElementById('generated-revive-code').innerText = reviveCode;
+                document.getElementById('admin-decoded-report').style.display = 'block';
+            } catch (e) {
+                alert('識別碼解析失敗，請確認代碼沒有缺漏字元！');
+            }
+        }
+
+        // 玩家在死亡視窗輸入復活解鎖碼
+        function redeemReviveCode() {
+            const inputCode = document.getElementById('player-input-revive-code').value.trim();
+            if (!inputCode.startsWith('REVIVE-')) {
+                alert('復活解鎖碼格式錯誤！請貼上管理員提供的 REVIVE- 開頭代碼。');
+                return;
+            }
+            try {
+                const obj = JSON.parse(decodeBase64Unicode(inputCode.slice(7)));
+                const expectedSig = encodeBase64Unicode(currentUser + '|' + REVIVE_SECRET_SALT);
+
+                if (obj.u !== currentUser || obj.sig !== expectedSig) {
+                    alert(`此復活碼屬於帳號【${obj.u}】，與您目前的帳號【${currentUser}】不符！`);
+                    return;
+                }
+
+                const pwd = state.password;
+                const resetObj = createDefaultUserState(pwd);
+                resetObj.logs.unshift({ text: '[✅管理員授權復活] 帳號已透過管理員專屬復活碼重置恢復！請記取教訓，繼續賭博！', type: 'success' });
+
+                state = {
+                    ...resetObj,
+                    selectedLottery: []
+                };
+                saveCurrentUserState();
+
+                document.getElementById('player-input-revive-code').value = '';
+                document.getElementById('death-modal').style.display = 'none';
+                renderLogsFromState();
+                renderOrganMarket();
+                updateGachaPoolInfo();
+                updateUI(true);
+                alert('🎉 驗證成功！您的帳號已重置復活，請記取教訓遠離賭博與高利貸！');
+            } catch (e) {
+                alert('復活解鎖碼無效或已損毀！');
+            }
+        }
+
+        const organCatalog = [
+            {
+                id: 'cornea', name: '單側眼角膜', payout: 15000, maxHealthLoss: 15, dailyHealthDrain: 3, isFatal: false,
+                desc: '獲得 $15,000 黑市現金。代價：單眼永久失明，健康上限永久 -15%，每日因感染風險健康 -3%。'
+            },
+            {
+                id: 'liver_part', name: '60% 部分肝臟', payout: 35000, maxHealthLoss: 25, dailyHealthDrain: 6, isFatal: false,
+                desc: '獲得 $35,000 黑市現金。代價：代謝功能嚴重受損、終身服藥，健康上限永久 -25%，每日健康 -6%。'
+            },
+            {
+                id: 'kidney_left', name: '左側腎臟 (第一顆腎)', payout: 50000, maxHealthLoss: 30, dailyHealthDrain: 8, isFatal: false,
+                desc: '獲得 $50,000 黑市現金。代價：僅剩單腎維持排毒，健康上限永久 -30%，每日術後併發症健康 -8%。'
+            },
+            {
+                id: 'kidney_right', name: '右側腎臟 (最後一顆腎)', payout: 60000, maxHealthLoss: 100, dailyHealthDrain: 0, isFatal: true,
+                fatalReason: '您摘除了體內僅存的腎臟，黑市無洗腎設備，體內毒素迅速累積導致急性尿毒症與多重器官衰竭死亡！',
+                desc: '⚠️【維生重要器官】摘除後體內將無任何腎臟運作，手術後將直接死亡！'
+            },
+            {
+                id: 'lungs', name: '雙側肺葉', payout: 120000, maxHealthLoss: 100, dailyHealthDrain: 0, isFatal: true,
+                fatalReason: '您簽字出賣了重要呼吸器官，麻醉退去後無法自主呼吸，在極度痛苦中窒息死亡！',
+                desc: '⚠️【維生重要器官】失去核心呼吸器官將無法供氧，簽約手術即代表死亡！'
+            },
+            {
+                id: 'heart', name: '完整心臟 (活體摘除)', payout: 300000, maxHealthLoss: 100, dailyHealthDrain: 0, isFatal: true,
+                fatalReason: '為了償還賭債，您簽下了活體心臟摘除同意書。手術刀落下的那一刻，您的生命徹底終結，再多鈔票也花不到了。',
+                desc: '💀【核心維生器官】摘除心臟等同立即結束生命！一旦執行，帳號將永久死亡！'
+            }
+        ];
+
+        function getAllAdminCreds() {
+            const raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+            if (!raw) return JSON.parse(JSON.stringify(DEFAULT_ADMINS));
+            const parsed = JSON.parse(raw);
+            return {
+                admin1: parsed.admin1 || DEFAULT_ADMINS.admin1,
+                admin2: parsed.admin2 || DEFAULT_ADMINS.admin2
+            };
+        }
+
+        function updateAdminCredentials() {
+            if (!isAdmin || !currentAdminSlot) return;
+            const newUser = document.getElementById('new-admin-user').value.trim();
+            const newPass = document.getElementById('new-admin-pass').value.trim();
+            if (!newUser || !newPass) {
+                alert('請完整輸入新的管理員帳號與密碼！');
+                return;
+            }
+            const allAdmins = getAllAdminCreds();
+            const otherSlot = currentAdminSlot === 'admin1' ? 'admin2' : 'admin1';
+            if (newUser.toLowerCase() === allAdmins[otherSlot].username.toLowerCase()) {
+                alert('此帳號名稱已被另一位管理員使用，請設定不同的帳號！');
+                return;
+            }
+
+            allAdmins[currentAdminSlot] = { username: newUser, password: newPass };
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(allAdmins));
+
+            currentUser = newUser;
+            const slotLabel = currentAdminSlot === 'admin1' ? '管理員 1' : '管理員 2';
+            document.getElementById('display-current-user').innerText = `${slotLabel} (${newUser})`;
+            document.getElementById('new-admin-user').value = '';
+            document.getElementById('new-admin-pass').value = '';
+            alert(`【${slotLabel}】帳號密碼已成功獨立更新！\n下次登入請使用新帳號：【${newUser}】`);
+        }
+
+        function getAllUsers() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : {};
+        }
+
+        function saveAllUsers(db) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        }
+
+        function createDefaultUserState(password) {
+            return {
+                password: password,
+                cash: 10000,
+                bankLoan: 0,
+                sharkLoan: 0,
+                health: 100,
+                maxHealth: 100,
+                day: 1,
+                gachaCount: 0,
+                gachaSpent: 0,
+                pityCounter: 0,
+                soldOrgans: [],
+                isDead: false,
+                deathReason: '',
+                logs: [{ text: '[系統] 帳號建立完成，初始資金 $10,000。請體驗賭博、投機槓桿與高利貸風險。', type: '' }]
+            };
+        }
+
+        function saveCurrentUserState() {
+            if (!currentUser || isAdmin) return;
+            const db = getAllUsers();
+            db[currentUser] = {
+                ...db[currentUser],
+                password: state.password,
+                cash: state.cash,
+                bankLoan: state.bankLoan,
+                sharkLoan: state.sharkLoan,
+                health: state.health,
+                maxHealth: state.maxHealth,
+                day: state.day,
+                gachaCount: state.gachaCount,
+                gachaSpent: state.gachaSpent,
+                pityCounter: state.pityCounter,
+                soldOrgans: state.soldOrgans,
+                isDead: state.isDead,
+                deathReason: state.deathReason,
+                logs: state.logs
+            };
+            saveAllUsers(db);
+        }
+
+        function switchLoginRole(role) {
+            document.getElementById('tab-role-user').classList.toggle('active', role === 'user');
+            document.getElementById('tab-role-admin1').classList.toggle('active', role === 'admin1');
+            document.getElementById('tab-role-admin2').classList.toggle('active', role === 'admin2');
+
+            document.getElementById('form-user-login').classList.toggle('active', role === 'user');
+            document.getElementById('form-admin1-login').classList.toggle('active', role === 'admin1');
+            document.getElementById('form-admin2-login').classList.toggle('active', role === 'admin2');
+        }
+
+        function showDeathModalWithCode() {
+            document.getElementById('death-reason-text').innerText = state.deathReason;
+            document.getElementById('player-death-status-code').innerText = generatePlayerStatusCode();
+            document.getElementById('death-modal').style.display = 'flex';
+        }
+
+        function loginAsUser() {
+            const username = document.getElementById('input-username').value.trim();
+            const password = document.getElementById('input-userpass').value.trim();
+            const allAdmins = getAllAdminCreds();
+
+            if (!username || !password) {
+                alert('請輸入用家帳號與密碼！');
+                return;
+            }
+            if (
+                username.toLowerCase() === allAdmins.admin1.username.toLowerCase() ||
+                username.toLowerCase() === allAdmins.admin2.username.toLowerCase()
+            ) {
+                alert('此名稱為管理員保留帳號，請使用其他用家名稱！');
+                return;
+            }
+
+            const db = getAllUsers();
+            if (db[username]) {
+                if (db[username].password !== password) {
+                    alert('密碼錯誤！請輸入正確的用家密碼。');
+                    return;
+                }
+            } else {
+                db[username] = createDefaultUserState(password);
+                saveAllUsers(db);
+            }
+
+            currentUser = username;
+            currentAdminSlot = null;
+            isAdmin = false;
+
+            const uData = db[username];
+            state = {
+                password: uData.password,
+                cash: uData.cash,
+                bankLoan: uData.bankLoan,
+                sharkLoan: uData.sharkLoan,
+                health: uData.health,
+                maxHealth: uData.maxHealth !== undefined ? uData.maxHealth : 100,
+                day: uData.day,
+                gachaCount: uData.gachaCount || 0,
+                gachaSpent: uData.gachaSpent || 0,
+                pityCounter: uData.pityCounter || 0,
+                soldOrgans: uData.soldOrgans || [],
+                isDead: uData.isDead || false,
+                deathReason: uData.deathReason || '',
+                logs: uData.logs || [],
+                selectedLottery: []
+            };
+
+            document.getElementById('input-username').value = '';
+            document.getElementById('input-userpass').value = '';
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('user-bar').style.display = 'flex';
+            document.getElementById('display-role-badge').className = 'badge-role badge-user';
+            document.getElementById('display-role-badge').innerText = '客戶帳號';
+            document.getElementById('display-current-user').innerText = username;
+
+            document.getElementById('admin-view').style.display = 'none';
+            document.getElementById('user-view').style.display = 'flex';
+
+            renderLogsFromState();
+            renderOrganMarket();
+            updateGachaPoolInfo();
+            updateLotterySelectionUI();
+            updateUI(false);
+
+            if (state.isDead) {
+                showDeathModalWithCode();
+            }
+        }
+
+        function loginAsAdmin(slot) {
+            const nameInputId = slot === 'admin1' ? 'input-admin1name' : 'input-admin2name';
+            const passInputId = slot === 'admin1' ? 'input-admin1pass' : 'input-admin2pass';
+            const slotLabel = slot === 'admin1' ? '管理員 1' : '管理員 2';
+
+            const adminName = document.getElementById(nameInputId).value.trim();
+            const adminPass = document.getElementById(passInputId).value.trim();
+            const allAdmins = getAllAdminCreds();
+            const validCreds = allAdmins[slot];
+
+            if (!validCreds.password) {
+                alert(`【${slotLabel}】尚未設定密碼！請先在程式碼最下方的 DEFAULT_ADMINS.${slot}.password 填入密碼。`);
+                return;
+            }
+
+            if (!adminName || !adminPass) {
+                alert(`請輸入${slotLabel}帳號與密碼！`);
+                return;
+            }
+
+            if (adminName === validCreds.username && adminPass === validCreds.password) {
+                currentUser = validCreds.username;
+                currentAdminSlot = slot;
+                isAdmin = true;
+
+                document.getElementById(nameInputId).value = '';
+                document.getElementById(passInputId).value = '';
+
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('user-bar').style.display = 'flex';
+                document.getElementById('display-role-badge').className = 'badge-role badge-admin';
+                document.getElementById('display-role-badge').innerText = slotLabel;
+                document.getElementById('display-current-user').innerText = `${slotLabel} (${validCreds.username})`;
+                document.getElementById('admin-security-title').innerText = `🔐 ${slotLabel} 專屬安全設定（僅更改 ${slotLabel} 帳號與密碼）`;
+
+                document.getElementById('user-view').style.display = 'none';
+                document.getElementById('admin-view').style.display = 'flex';
+
+                renderAdminDashboard();
+            } else {
+                alert(`${slotLabel} 帳號或密碼錯誤！`);
+                document.getElementById(passInputId).value = '';
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentAdminSlot = null;
+            isAdmin = false;
+            document.getElementById('death-modal').style.display = 'none';
+            document.getElementById('input-admin1name').value = '';
+            document.getElementById('input-admin1pass').value = '';
+            document.getElementById('input-admin2name').value = '';
+            document.getElementById('input-admin2pass').value = '';
+            document.getElementById('user-bar').style.display = 'none';
+            document.getElementById('user-view').style.display = 'none';
+            document.getElementById('admin-view').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        // ================= 本機管理員列表渲染與操作 =================
+        function renderAdminDashboard() {
+            const db = getAllUsers();
+            const usernames = Object.keys(db);
+
+            const tbody = document.getElementById('admin-users-tbody');
+            tbody.innerHTML = '';
+
+            if (usernames.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--text-sub);">本機尚無用家登入紀錄（其他裝置玩家請使用上方「狀態回報識別碼」查看與復活）</td></tr>';
+            } else {
+                usernames.forEach(uname => {
+                    const u = db[uname];
+                    const soldList = u.soldOrgans || [];
+
+                    let statusHtml = '<span class="risk-tag risk-low">存活 / 正常</span>';
+                    if (u.isDead) {
+                        statusHtml = '<span class="risk-tag risk-dead">💀 已死亡 (摘除重要器官)</span>';
+                    } else if (soldList.length > 0 || u.sharkLoan >= 10000 || u.health <= 30) {
+                        statusHtml = '<span class="risk-tag risk-high">高度危機 / 器官受損</span>';
+                    } else if (u.sharkLoan > 0 || u.bankLoan > 0 || u.cash < 3000) {
+                        statusHtml = '<span class="risk-tag risk-mid">借貸與財務預警</span>';
+                    }
+
+                    const organNames = soldList.length > 0 
+                        ? soldList.map(id => {
+                            const found = organCatalog.find(o => o.id === id);
+                            return found ? found.name : id;
+                        }).join('、')
+                        : '無';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${uname}</strong></td>
+                        <td>第 ${u.day} 天</td>
+                        <td style="color: var(--accent-green);">$${u.cash.toLocaleString()}</td>
+                        <td>$${u.bankLoan.toLocaleString()}</td>
+                        <td style="color: ${u.sharkLoan > 0 ? 'var(--accent-red)' : 'inherit'}; font-weight: bold;">$${u.sharkLoan.toLocaleString()}</td>
+                        <td>${u.health}% / ${u.maxHealth !== undefined ? u.maxHealth : 100}%</td>
+                        <td style="color: ${soldList.length > 0 ? '#fca5a5' : 'var(--text-sub)'};">${organNames}</td>
+                        <td>${statusHtml}</td>
+                        <td>
+                            <button class="btn-primary btn-sm" onclick="adminViewUserLogs('${uname}')">查看日誌</button>
+                            <button class="btn-loan btn-sm" onclick="adminResetUser('${uname}')">重置復活</button>
+                            <button class="btn-bet btn-sm" onclick="adminDeleteUser('${uname}')">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function adminViewUserLogs(uname) {
+            const db = getAllUsers();
+            const u = db[uname];
+            if (!u) return;
+
+            document.getElementById('admin-modal-title').innerText = `📋 用家【${uname}】的完整行為軌跡`;
+            const container = document.getElementById('admin-modal-logs');
+            container.innerHTML = '';
+
+            if (!u.logs || u.logs.length === 0) {
+                container.innerHTML = '<div class="log-item">尚無操作紀錄</div>';
+            } else {
+                u.logs.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = `log-item ${item.type || ''}`;
+                    div.innerText = item.text;
+                    container.appendChild(div);
+                });
+            }
+            document.getElementById('admin-log-modal').style.display = 'flex';
+        }
+
+        function adminResetUser(uname) {
+            if (!confirm(`確定要重置本機用家【${uname}】的現金、負債與生命狀態嗎？`)) return;
+            const db = getAllUsers();
+            if (db[uname]) {
+                const pwd = db[uname].password;
+                db[uname] = createDefaultUserState(pwd);
+                saveAllUsers(db);
+                renderAdminDashboard();
+            }
+        }
+
+        function adminDeleteUser(uname) {
+            if (!confirm(`確定要永久刪除本機用家【${uname}】的帳號嗎？`)) return;
+            const db = getAllUsers();
+            delete db[uname];
+            saveAllUsers(db);
+            renderAdminDashboard();
+        }
+
+        // ================= 地下黑市器官典當渲染與邏輯 =================
+        function renderOrganMarket() {
+            const grid = document.getElementById('organ-market-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            organCatalog.forEach(organ => {
+                const isSold = state.soldOrgans.includes(organ.id);
+                const card = document.createElement('div');
+                card.className = `organ-card ${organ.isFatal ? 'fatal' : ''} ${isSold ? 'sold' : ''}`;
+
+                let btnText = isSold ? '已摘除（不可恢復）' : `簽字摘除換取 $${organ.payout.toLocaleString()}`;
+                if (organ.isFatal && !isSold) {
+                    btnText = `⚠️ 簽字摘除 ($${organ.payout.toLocaleString()} / 致命風險)`;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="organ-header">
+                            <span>${organ.name}</span>
+                            <span class="organ-price">+$${organ.payout.toLocaleString()}</span>
+                        </div>
+                        <p class="organ-consequence" style="margin-top: 0.5rem;">${organ.desc}</p>
+                    </div>
+                    <button class="btn-bet" style="width: 100%; margin-top: 0.5rem; background: ${isSold ? '#334155' : (organ.isFatal ? '#7f1d1d' : '#dc2626')};" 
+                        ${isSold ? 'disabled' : ''} onclick="sellOrgan('${organ.id}')">
+                        ${btnText}
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function sellOrgan(organId) {
+            if (state.isDead) return;
+            const organ = organCatalog.find(o => o.id === organId);
+            if (!organ || state.soldOrgans.includes(organId)) return;
+
+            const warningMsg = organ.isFatal
+                ? `【極度致命警告】\n您正在嘗試在地下黑市出賣「${organ.name}」！\n這是維持生命的核心器官，一旦簽字摘除，您將立即在手術台上死亡，帳號也會永久終結！\n\n確定要為了換錢繼續嗎？`
+                : `【不可逆身體損傷警告】\n確定要在地下黑市摘除「${organ.name}」換取 $${organ.payout.toLocaleString()} 嗎？\n您的健康上限將永久降低 ${organ.maxHealthLoss}%，且每日承受術後折磨！`;
+
+            if (!confirm(warningMsg)) return;
+
+            state.soldOrgans.push(organ.id);
+            state.cash += organ.payout;
+
+            if (organ.isFatal) {
+                state.health = 0;
+                state.maxHealth = 0;
+                state.isDead = true;
+                state.deathReason = organ.fatalReason;
+                log(`[💀生命終結] 在地下黑市簽字摘除【${organ.name}】，手術後生理機能衰竭死亡！`, 'danger');
+                updateUI(true);
+                renderOrganMarket();
+                showDeathModalWithCode();
+            } else {
+                state.maxHealth = Math.max(10, state.maxHealth - organ.maxHealthLoss);
+                state.health = Math.min(state.maxHealth, Math.max(0, state.health - organ.maxHealthLoss));
+                log(`[🩸黑市摘除] 為了籌錢在黑市摘除【${organ.name}】，獲得 $${organ.payout.toLocaleString()}，但身體健康上限永久暴跌至 ${state.maxHealth}%！`, 'danger');
+                updateUI(true);
+                renderOrganMarket();
+            }
+        }
+
+        // ================= 全球足球、籃球與抽卡資料庫 =================
+        const footballDatabase = {
+            "world_cup": {
+                name: "世界盃國家隊 (World Cup)",
+                teams: [
+                    { name: "阿根廷", flag: "🇦🇷" }, { name: "巴西", flag: "🇧🇷" },
+                    { name: "法國", flag: "🇫🇷" }, { name: "英格蘭", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+                    { name: "西班牙", flag: "🇪🇸" }, { name: "德國", flag: "🇩🇪" },
+                    { name: "葡萄牙", flag: "🇵🇹" }, { name: "荷蘭", flag: "🇳🇱" },
+                    { name: "義大利", flag: "🇮🇹" }, { name: "日本", flag: "🇯🇵" }
+                ]
+            },
+            "epl": {
+                name: "英超聯賽 (Premier League)",
+                teams: [
+                    { name: "曼城", flag: "🔵" }, { name: "阿森納", flag: "🔴" },
+                    { name: "利物浦", flag: "🔴" }, { name: "切爾西", flag: "🔵" },
+                    { name: "曼聯", flag: "🔴" }, { name: "熱刺", flag: "⚪" }
+                ]
+            },
+            "laliga": {
+                name: "西甲聯賽 (La Liga)",
+                teams: [
+                    { name: "皇家馬德里", flag: "⚪" }, { name: "巴塞隆納", flag: "🔵🔴" },
+                    { name: "馬德里競技", flag: "🔴⚪" }, { name: "畢爾包競技", flag: "🔴⚪" }
+                ]
+            }
+        };
+
+        const basketballDatabase = {
+            "nba": {
+                name: "NBA 美國職業籃球聯賽",
+                teams: [
+                    { name: "洛杉磯湖人 (Lakers)", flag: "🟡🟣" },
+                    { name: "金州勇士 (Warriors)", flag: "🔵🟡" },
+                    { name: "波士頓塞爾提克 (Celtics)", flag: "🟢⚪" },
+                    { name: "丹佛金塊 (Nuggets)", flag: "🔵🟡" },
+                    { name: "達拉斯獨行俠 (Mavericks)", flag: "🔵⚪" },
+                    { name: "密爾瓦基公鹿 (Bucks)", flag: "🟢" },
+                    { name: "鳳凰城太陽 (Suns)", flag: "🟣🟠" },
+                    { name: "邁阿密熱火 (Heat)", flag: "🔴⚫" }
+                ]
+            },
+            "fiba": {
+                name: "FIBA 國際籃球國家隊",
+                teams: [
+                    { name: "美國男籃", flag: "🇺🇸" }, { name: "法國男籃", flag: "🇫🇷" },
+                    { name: "塞爾維亞男籃", flag: "🇷🇸" }, { name: "加拿大男籃", flag: "🇨🇦" },
+                    { name: "德國男籃", flag: "🇩🇪" }, { name: "澳洲男籃", flag: "🇦🇺" }
+                ]
+            }
+        };
+
+        const gachaPools = {
+            "rpg_gacha": {
+                title: "二次元手遊限定角色池", cost: 1500, pulls: 10,
+                rateInfo: "UP 5星角色機率 0.6% (50% 機率歪常駐角色)", urRate: 0.006, srRate: 0.08,
+                urCards: ["限定UP・星穹神女 (5★)", "常駐歪出・烈焰騎士 (5★)", "常駐歪出・寒冰法師 (5★)"],
+                srCards: ["四星・疾風弓手", "四星・重裝衛士", "四星・治癒修女"],
+                rCards: ["三星・生鏽鐵劍", "三星・木製法杖", "三星・初學者徽章"]
+            },
+            "tcg_pack": {
+                title: "實體集換式卡牌補充包 (TCG)", cost: 300, pulls: 5,
+                rateInfo: "SAR / 異圖全圖閃卡機率 1.2% (其餘多為 1 元廢卡)", urRate: 0.012, srRate: 0.12,
+                urCards: ["SAR 異圖・噴火龍 ex (全圖閃)", "UR 黃金・青眼白龍 (浮雕版)"],
+                srCards: ["RR 雙倍稀有・皮卡丘 V", "SR 閃卡・黑魔導女孩"],
+                rCards: ["C 普通・小拉達", "C 普通・鯉魚王", "C 普通・基本能量卡"]
+            },
+            "sports_card": {
+                title: "球星簽名鑑定卡盲盒 (Sports Box)", cost: 3000, pulls: 4,
+                rateInfo: "限量親筆簽名 / 1-of-1 球衣切片卡機率 2%", urRate: 0.02, srRate: 0.15,
+                urCards: ["1/1 限量親筆簽名・梅西金卡", "PSA 10 球衣切片・詹姆斯新秀卡"],
+                srCards: ["限量 /99 銀折射・柯瑞", "限量 /199 亮面・哈蘭德"],
+                rCards: ["普卡 Base・替補後衛", "普卡 Base・二輪新秀"]
+            },
+            "fps_crate": {
+                title: "射擊遊戲武器造型箱 (Loot Box)", cost: 1000, pulls: 5,
+                rateInfo: "極罕見傳說刀具 / 龍狙造型機率 0.26%", urRate: 0.0026, srRate: 0.06,
+                urCards: ["★ 爪子刀 | 漸層之色 (嶄新出廠)", "隱秘級・AWP 巨龍傳說"],
+                srCards: ["保密級・AK-47 血腥運動", "受限級・M4A4 皇帝"],
+                rCards: ["軍規級・P250 沙丘之色", "工業級・MP9 森林迷彩"]
+            },
+            "blind_box": {
+                title: "潮流公仔盲盒 (Blind Box)", cost: 1800, pulls: 6,
+                rateInfo: "隱藏版公仔機率 1/144 (0.69%，極易抽到重複款式)", urRate: 0.0069, srRate: 0.10,
+                urCards: ["【大隱藏 1/144】星空幻彩版公仔", "【小隱藏 1/72】限定夜光版公仔"],
+                srCards: ["熱門款・櫻花騎士", "熱門款・賽博貓咪"],
+                rCards: ["重複基礎款・西瓜頭", "重複基礎款・蘑菇仔", "重複基礎款・仙人掌"]
+            }
+        };
+
+        let state = {
+            password: '', cash: 10000, bankLoan: 0, sharkLoan: 0, health: 100, maxHealth: 100, day: 1,
+            gachaCount: 0, gachaSpent: 0, pityCounter: 0, soldOrgans: [], isDead: false, deathReason: '',
+            logs: [], selectedLottery: []
+        };
+
+        function updateUI(shouldSave = true) {
+            document.getElementById('val-cash').innerText = `$${state.cash.toLocaleString()}`;
+            const totalDebt = state.bankLoan + state.sharkLoan;
+            document.getElementById('val-debt').innerText = `$${totalDebt.toLocaleString()}`;
+            
+            const repayCashEl = document.getElementById('repay-available-cash');
+            const bankDetailEl = document.getElementById('detail-bank-debt');
+            const sharkDetailEl = document.getElementById('detail-shark-debt');
+            if (repayCashEl) repayCashEl.innerText = `$${state.cash.toLocaleString()}`;
+            if (bankDetailEl) bankDetailEl.innerText = `$${state.bankLoan.toLocaleString()}`;
+            if (sharkDetailEl) sharkDetailEl.innerText = `$${state.sharkLoan.toLocaleString()}`;
+
+            const dailyInterest = Math.floor(state.bankLoan * 0.005 + state.sharkLoan * 0.10);
+            document.getElementById('val-interest').innerText = `$${dailyInterest.toLocaleString()} /天`;
+
+            document.getElementById('val-max-health').innerText = state.maxHealth;
+            const healthEl = document.getElementById('val-health');
+            healthEl.innerText = state.isDead ? '已死亡 (0%)' : `${state.health}%`;
+            if (state.health < 40 || state.isDead) healthEl.style.color = 'var(--accent-red)';
+            else if (state.health < 70) healthEl.style.color = 'var(--accent-gold)';
+            else healthEl.style.color = 'var(--accent-green)';
+
+            document.getElementById('val-day').innerText = `第 ${state.day} 天`;
+
+            if (shouldSave) saveCurrentUserState();
+        }
+
+        function log(msg, type = '') {
+            if (!state.logs) state.logs = [];
+            const fullText = `[第${state.day}天] ${msg}`;
+            state.logs.unshift({ text: fullText, type: type });
+            if (state.logs.length > 100) state.logs.pop();
+
+            const container = document.getElementById('game-logs');
+            const item = document.createElement('div');
+            item.className = `log-item ${type}`;
+            item.innerText = fullText;
+            container.insertBefore(item, container.firstChild);
+        }
+
+        function renderLogsFromState() {
+            const container = document.getElementById('game-logs');
+            container.innerHTML = '';
+            (state.logs || []).forEach(l => {
+                const item = document.createElement('div');
+                item.className = `log-item ${l.type || ''}`;
+                item.innerText = l.text;
+                container.appendChild(item);
+            });
+        }
+
+        function switchTab(tabId, btnEl) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            if (btnEl) btnEl.classList.add('active');
+        }
+
+        function checkCash(amount) {
+            if (state.isDead) {
+                alert('此帳號已因摘除重要器官死亡，無法再進行任何操作！');
+                return false;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                alert('請輸入有效的金額！');
+                return false;
+            }
+            if (state.cash < amount) {
+                alert('現金不足！你是否正在考慮前往「借錢/地下錢莊」甚至「地下黑市」？（警惕：這正是走向毀滅的開始）');
+                return false;
+            }
+            return true;
+        }
+
+        // --- 1. 全球足球 ---
+        function initSportsDropdowns() {
+            const leagueSelect = document.getElementById('sports-league');
+            leagueSelect.innerHTML = '';
+            Object.keys(footballDatabase).forEach(key => {
+                leagueSelect.appendChild(new Option(footballDatabase[key].name, key));
+            });
+            updateSportsTeams();
+        }
+
+        function updateSportsTeams() {
+            const key = document.getElementById('sports-league').value;
+            const teams = footballDatabase[key].teams;
+            const t1 = document.getElementById('sports-team1');
+            const t2 = document.getElementById('sports-team2');
+            t1.innerHTML = ''; t2.innerHTML = '';
+            teams.forEach((t, idx) => {
+                t1.appendChild(new Option(`${t.flag} ${t.name}`, idx));
+                t2.appendChild(new Option(`${t.flag} ${t.name}`, idx));
+            });
+            if (teams.length > 1) t2.selectedIndex = 1;
+            updateSportsBanner();
+        }
+
+        function updateSportsBanner() {
+            const key = document.getElementById('sports-league').value;
+            const teams = footballDatabase[key].teams;
+            const teamA = teams[document.getElementById('sports-team1').value];
+            const teamB = teams[document.getElementById('sports-team2').value];
+            if (teamA && teamB) {
+                document.getElementById('sports-matchup').innerText = `${teamA.flag} ${teamA.name} vs ${teamB.flag} ${teamB.name}`;
+                document.getElementById('sports-score').innerText = '準備開賽（完全隨機勝負）';
+            }
+        }
+
+        function playSports() {
+            const key = document.getElementById('sports-league').value;
+            const teams = footballDatabase[key].teams;
+            const idx1 = document.getElementById('sports-team1').value;
+            const idx2 = document.getElementById('sports-team2').value;
+            if (idx1 === idx2) { alert('請選擇兩支不同的球隊！'); return; }
+
+            const amount = parseInt(document.getElementById('sports-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const teamA = teams[idx1];
+            const teamB = teams[idx2];
+            const pick = document.getElementById('sports-pick').value;
+
+            const outcome = Math.floor(Math.random() * 3) - 1;
+            let scoreA = 0, scoreB = 0;
+            if (outcome === 1) { scoreA = Math.floor(Math.random() * 4) + 1; scoreB = Math.floor(Math.random() * scoreA); }
+            else if (outcome === -1) { scoreB = Math.floor(Math.random() * 4) + 1; scoreA = Math.floor(Math.random() * scoreB); }
+            else { scoreA = Math.floor(Math.random() * 3); scoreB = scoreA; }
+
+            document.getElementById('sports-score').innerText = `完場比分：${scoreA} - ${scoreB}`;
+
+            if ((outcome === 1 && pick === 'A') || (outcome === -1 && pick === 'B')) {
+                const win = Math.floor(amount * 1.90);
+                state.cash += win;
+                log(`[足球] ${teamA.name} ${scoreA}-${scoreB} ${teamB.name}，猜中勝負！贏得 $${win - amount}`, 'success');
+            } else if (outcome === 0 && pick === 'D') {
+                const win = Math.floor(amount * 3.10);
+                state.cash += win;
+                log(`[足球] ${teamA.name} ${scoreA}-${scoreB} ${teamB.name}，猜中平局！贏得 $${win - amount}`, 'success');
+            } else {
+                log(`[足球] ${teamA.name} ${scoreA}-${scoreB} ${teamB.name}，預測失敗，損失 $${amount}`, 'danger');
+                state.health = Math.max(0, state.health - 2);
+            }
+            updateUI();
+        }
+
+        // --- 1B. 全球籃球 / NBA ---
+        function initBballDropdowns() {
+            const leagueSelect = document.getElementById('bball-league');
+            leagueSelect.innerHTML = '';
+            Object.keys(basketballDatabase).forEach(key => {
+                leagueSelect.appendChild(new Option(basketballDatabase[key].name, key));
+            });
+            updateBballTeams();
+        }
+
+        function updateBballTeams() {
+            const key = document.getElementById('bball-league').value;
+            const teams = basketballDatabase[key].teams;
+            const t1 = document.getElementById('bball-team1');
+            const t2 = document.getElementById('bball-team2');
+            t1.innerHTML = ''; t2.innerHTML = '';
+            teams.forEach((t, idx) => {
+                t1.appendChild(new Option(`${t.flag} ${t.name}`, idx));
+                t2.appendChild(new Option(`${t.flag} ${t.name}`, idx));
+            });
+            if (teams.length > 1) t2.selectedIndex = 1;
+            updateBballBanner();
+        }
+
+        function updateBballBanner() {
+            const key = document.getElementById('bball-league').value;
+            const teams = basketballDatabase[key].teams;
+            const teamA = teams[document.getElementById('bball-team1').value];
+            const teamB = teams[document.getElementById('bball-team2').value];
+            if (teamA && teamB) {
+                document.getElementById('bball-matchup').innerText = `${teamA.flag} ${teamA.name} vs ${teamB.flag} ${teamB.name}`;
+                document.getElementById('bball-score').innerText = '準備跳球開賽（完全隨機勝負）';
+            }
+        }
+
+        function playBasketball() {
+            const key = document.getElementById('bball-league').value;
+            const teams = basketballDatabase[key].teams;
+            const idx1 = document.getElementById('bball-team1').value;
+            const idx2 = document.getElementById('bball-team2').value;
+            if (idx1 === idx2) { alert('請選擇兩支不同的籃球隊！'); return; }
+
+            const amount = parseInt(document.getElementById('bball-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const teamA = teams[idx1];
+            const teamB = teams[idx2];
+            const pick = document.getElementById('bball-pick').value;
+
+            const aWins = Math.random() < 0.5;
+            const baseScore = 92 + Math.floor(Math.random() * 32);
+            const diff = 1 + Math.floor(Math.random() * 18);
+
+            const scoreA = aWins ? baseScore + diff : baseScore;
+            const scoreB = aWins ? baseScore : baseScore + diff;
+
+            document.getElementById('bball-score').innerText = `完場比分：${scoreA} - ${scoreB}`;
+
+            if ((aWins && pick === 'A') || (!aWins && pick === 'B')) {
+                const win = Math.floor(amount * 1.90);
+                state.cash += win;
+                log(`[籃球] ${teamA.name} ${scoreA}-${scoreB} ${teamB.name}，猜中獲勝！贏得 $${win - amount}`, 'success');
+            } else {
+                log(`[籃球] ${teamA.name} ${scoreA}-${scoreB} ${teamB.name}，預測失敗，損失 $${amount}`, 'danger');
+                state.health = Math.max(0, state.health - 2);
+            }
+            updateUI();
+        }
+
+        // --- 1C. 短線投機炒股 / 高倍槓桿 ---
+        function updateStockBanner() {
+            const sym = document.getElementById('stock-symbol').value;
+            const price = (50 + Math.random() * 250).toFixed(2);
+            document.getElementById('disp-stock-ticker').innerText = `${sym} | 當前報價：$${price}`;
+            document.getElementById('disp-stock-result').innerText = '選擇方向與槓桿倍數下單';
+        }
+
+        function playStocks() {
+            const amount = parseInt(document.getElementById('stock-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const sym = document.getElementById('stock-symbol').value;
+            const leverage = parseInt(document.getElementById('stock-leverage').value);
+            const direction = document.getElementById('stock-direction').value;
+
+            const rawMovePct = (Math.random() * 0.30) - 0.155; 
+            const movePctDisplay = (rawMovePct * 100).toFixed(2);
+
+            const directionalReturn = direction === 'long' ? rawMovePct : -rawMovePct;
+            const leveragedReturn = directionalReturn * leverage;
+
+            const dirText = direction === 'long' ? '做多(看漲)' : '做空(看跌)';
+            const resEl = document.getElementById('disp-stock-result');
+
+            if (leveragedReturn <= -1.0) {
+                resEl.style.color = 'var(--accent-red)';
+                resEl.innerText = `💥 市場波動 ${movePctDisplay}%，觸發 ${leverage}倍 強制平倉爆倉！保證金全數歸零！`;
+                log(`[投機炒股] ${sym} (${leverage}倍${dirText}) 市場反向波動 ${movePctDisplay}%，慘遭爆倉歸零，損失 $${amount}！`, 'danger');
+                state.health = Math.max(0, state.health - 8);
+            } else if (leveragedReturn > 0) {
+                const profit = Math.floor(amount * leveragedReturn);
+                const totalReturn = amount + profit;
+                state.cash += totalReturn;
+                resEl.style.color = 'var(--accent-green)';
+                resEl.innerText = `📈 市場波動 ${movePctDisplay}%，平倉獲利 +$${profit.toLocaleString()}！`;
+                log(`[投機炒股] ${sym} (${leverage}倍${dirText}) 市場波動 ${movePctDisplay}%，短線獲利 $${profit}（警惕：高槓桿一次看錯即歸零）`, 'success');
+            } else {
+                const loss = Math.floor(amount * Math.abs(leveragedReturn));
+                const remaining = Math.max(0, amount - loss);
+                state.cash += remaining;
+                resEl.style.color = 'var(--accent-red)';
+                resEl.innerText = `📉 市場波動 ${movePctDisplay}%，止損虧損 -$${loss.toLocaleString()}`;
+                log(`[投機炒股] ${sym} (${leverage}倍${dirText}) 方向看錯，虧損 $${loss}`, 'danger');
+                state.health = Math.max(0, state.health - 3);
+            }
+
+            updateUI();
+        }
+
+        // --- 2. 百家樂 ---
+        function playBaccarat() {
+            const amount = parseInt(document.getElementById('bac-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const pick = document.getElementById('bac-pick').value;
+            const rand = Math.random();
+            const pCard = Math.floor(Math.random() * 9) + 1;
+            const bCard = Math.floor(Math.random() * 9) + 1;
+            document.getElementById('disp-baccarat').innerHTML = `<span>🂠 ${bCard}</span> vs <span>🂠 ${pCard}</span>`;
+
+            if (rand < 0.458 && pick === 'banker') {
+                const win = Math.floor(amount * 1.95);
+                state.cash += win;
+                log(`[百家樂] 莊勝！(抽水 5%) 獲得 $${win}`, 'success');
+            } else if (rand >= 0.458 && rand < 0.904 && pick === 'player') {
+                const win = amount * 2;
+                state.cash += win;
+                log(`[百家樂] 閒勝！獲得 $${win}`, 'success');
+            } else if (rand >= 0.904 && pick === 'tie') {
+                const win = amount * 9;
+                state.cash += win;
+                log(`[百家樂] 和局！獲得 $${win}`, 'success');
+            } else {
+                log(`[百家樂] 開牌落敗，損失 $${amount}`, 'danger');
+                state.health = Math.max(0, state.health - 2);
+            }
+            updateUI();
+        }
+
+        // --- 3. 骰子 ---
+        function playDice() {
+            const amount = parseInt(document.getElementById('dice-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const pick = document.getElementById('dice-pick').value;
+            const d1 = Math.floor(Math.random() * 6) + 1;
+            const d2 = Math.floor(Math.random() * 6) + 1;
+            const d3 = Math.floor(Math.random() * 6) + 1;
+            const sum = d1 + d2 + d3;
+
+            document.getElementById('disp-dice').innerText = `🎲 ${d1} ${d2} ${d3}`;
+            document.getElementById('disp-dice-val').innerText = `總點數: ${sum}`;
+
+            if (d1 === d2 && d2 === d3) {
+                log(`[骰子] 豹子/圍骰 (${sum}點) 莊家通殺！損失 $${amount}`, 'danger');
+                state.health = Math.max(0, state.health - 5);
+            } else if ((sum >= 11 && pick === 'big') || (sum <= 10 && pick === 'small')) {
+                state.cash += amount * 2;
+                log(`[骰子] 猜中 ${sum > 10 ? '大' : '小'}！贏得 $${amount}`, 'success');
+            } else {
+                log(`[骰子] 猜錯大小，損失 $${amount}`, 'danger');
+                state.health = Math.max(0, state.health - 2);
+            }
+            updateUI();
+        }
+
+        // --- 4. 輪盤 ---
+        function playRoulette() {
+            const amount = parseInt(document.getElementById('rou-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const pick = document.getElementById('rou-pick').value;
+            const num = Math.floor(Math.random() * 38);
+            const isRed = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(num);
+            const numStr = num === 37 ? '00' : num.toString();
+            document.getElementById('disp-roulette').innerText = `🎡 [ ${numStr} ]`;
+
+            if (pick === 'red' && isRed) {
+                state.cash += amount * 2;
+                log(`[輪盤] 開出紅號 ${numStr}！贏得 $${amount}`, 'success');
+            } else if (pick === 'black' && !isRed && num !== 0 && num !== 37) {
+                state.cash += amount * 2;
+                log(`[輪盤] 開出黑號 ${numStr}！贏得 $${amount}`, 'success');
+            } else {
+                log(`[輪盤] 莊家落球至 ${numStr}，投注歸零，損失 $${amount}`, 'danger');
+                state.health = Math.max(0, state.health - 2);
+            }
+            updateUI();
+        }
+
+        // --- 5. 老虎機 ---
+        function playSlots() {
+            const amount = parseInt(document.getElementById('slot-amount').value);
+            if (!checkCash(amount)) return;
+
+            state.cash -= amount;
+            const icons = ['🍒', '🍋', '🔔', '🍉', '💎', '7️⃣'];
+            const i1 = icons[Math.floor(Math.random() * icons.length)];
+            const i2 = icons[Math.floor(Math.random() * icons.length)];
+            const i3 = icons[Math.floor(Math.random() * icons.length)];
+
+            document.getElementById('disp-slots').innerText = `${i1} ${i2} ${i3}`;
+
+            if (i1 === i2 && i2 === i3) {
+                const win = amount * 10;
+                state.cash += win;
+                log(`[老虎機] 🎉 JACKPOT 大獎！獲得 $${win}`, 'success');
+            } else if (i1 === i2 || i2 === i3 || i1 === i3) {
+                const win = Math.floor(amount * 1.5);
+                state.cash += win;
+                log(`[老虎機] 湊成兩連圖，拿回 $${win}`, 'warning');
+            } else {
+                log(`[老虎機] 槓龜，拉桿金額 $${amount} 沒收`, 'danger');
+            }
+            updateUI();
+        }
+
+        // --- 6. 六合彩 ---
+        function initLotteryGrid() {
+            const grid = document.getElementById('lottery-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 49; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'num-btn';
+                btn.id = `lot-num-${i}`;
+                btn.innerText = i < 10 ? `0${i}` : i;
+                btn.onclick = () => toggleLotteryNumber(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function toggleLotteryNumber(num) {
+            const idx = state.selectedLottery.indexOf(num);
+            if (idx > -1) state.selectedLottery.splice(idx, 1);
+            else {
+                if (state.selectedLottery.length >= 6) { alert('最多只能選擇 6 個號碼！'); return; }
+                state.selectedLottery.push(num);
+            }
+            state.selectedLottery.sort((a, b) => a - b);
+            updateLotterySelectionUI();
+        }
+
+        function quickPickLottery() {
+            const pool = Array.from({ length: 49 }, (_, i) => i + 1);
+            pool.sort(() => Math.random() - 0.5);
+            state.selectedLottery = pool.slice(0, 6).sort((a, b) => a - b);
+            updateLotterySelectionUI();
+        }
+
+        function updateLotterySelectionUI() {
+            for (let i = 1; i <= 49; i++) {
+                const btn = document.getElementById(`lot-num-${i}`);
+                if (btn) btn.classList.toggle('selected', state.selectedLottery.includes(i));
+            }
+            const disp = document.getElementById('lottery-picked-display');
+            const formatted = state.selectedLottery.map(n => (n < 10 ? `0${n}` : n)).join(', ');
+            disp.innerText = state.selectedLottery.length > 0
+                ? `已選號碼 (${state.selectedLottery.length}/6)：[ ${formatted} ]`
+                : `已選號碼：尚未選滿 6 個 (0/6)`;
+        }
+
+        function playLottery() {
+            if (state.selectedLottery.length !== 6) { alert('請先選滿 6 個六合彩號碼！'); return; }
+            const cost = parseInt(document.getElementById('lottery-bet').value);
+            if (!checkCash(cost)) return;
+
+            state.cash -= cost;
+            const pool = Array.from({ length: 49 }, (_, i) => i + 1);
+            pool.sort(() => Math.random() - 0.5);
+            const winningNumbers = pool.slice(0, 6).sort((a, b) => a - b);
+
+            document.getElementById('disp-lottery').innerHTML = winningNumbers.map(num => {
+                const isHit = state.selectedLottery.includes(num);
+                const label = num < 10 ? `0${num}` : num;
+                return `<span class="ball ${isHit ? 'hit' : ''}">${label}</span>`;
+            }).join('');
+
+            const hitCount = state.selectedLottery.filter(n => winningNumbers.includes(n)).length;
+            const winStr = winningNumbers.map(n => (n < 10 ? `0${n}` : n)).join(', ');
+
+            if (hitCount === 6) {
+                const prize = cost * 100000; state.cash += prize;
+                log(`[六合彩] 🎉 中 6 個字頭獎！開獎 [${winStr}]，獲得 $${prize.toLocaleString()}！`, 'success');
+            } else if (hitCount === 5) {
+                const prize = cost * 500; state.cash += prize;
+                log(`[六合彩] 中 5 個字！開獎 [${winStr}]，獲得 $${prize.toLocaleString()}！`, 'success');
+            } else if (hitCount === 4) {
+                const prize = cost * 20; state.cash += prize;
+                log(`[六合彩] 中 4 個字！開獎 [${winStr}]，獲得 $${prize.toLocaleString()}！`, 'warning');
+            } else if (hitCount === 3) {
+                const prize = cost * 2; state.cash += prize;
+                log(`[六合彩] 中 3 個字安慰獎！開獎 [${winStr}]，獲得 $${prize.toLocaleString()}！`, 'warning');
+            } else {
+                log(`[六合彩] 僅中 ${hitCount} 個字（開獎：[${winStr}]），損失 $${cost}`, 'danger');
+                state.health = Math.max(0, state.health - 1);
+            }
+            updateUI();
+        }
+
+        // --- 7. 全類型抽卡 ---
+        function updateGachaPoolInfo() {
+            const poolKey = document.getElementById('gacha-pool-type').value;
+            const pool = gachaPools[poolKey];
+            document.getElementById('gacha-rate-tag').innerText = pool.rateInfo;
+            document.getElementById('gacha-pool-title').innerText = `【${pool.title}】抽卡結果：`;
+            document.getElementById('btn-gacha-pull').innerText = `進行 ${pool.pulls} 連抽 / 開箱 ($${pool.cost.toLocaleString()})`;
+            updateGachaStatsDisplay();
+        }
+
+        function updateGachaStatsDisplay() {
+            const pityLeft = Math.max(0, 90 - state.pityCounter);
+            document.getElementById('disp-gacha-stats').innerText = 
+                `累積抽數：${state.gachaCount} 抽 | 距離保底還差：${pityLeft} 抽 | 累積沉沒花費：$${state.gachaSpent.toLocaleString()}`;
+        }
+
+        function playGacha() {
+            const poolKey = document.getElementById('gacha-pool-type').value;
+            const pool = gachaPools[poolKey];
+            if (!checkCash(pool.cost)) return;
+
+            state.cash -= pool.cost;
+            state.gachaCount += pool.pulls;
+            state.gachaSpent += pool.cost;
+
+            const results = [];
+            let gotUR = false;
+            let urName = "";
+
+            for (let i = 0; i < pool.pulls; i++) {
+                state.pityCounter++;
+                const rand = Math.random();
+                if (state.pityCounter >= 90 || rand < pool.urRate) {
+                    state.pityCounter = 0;
+                    const cardName = pool.urCards[Math.floor(Math.random() * pool.urCards.length)];
+                    results.push({ tier: 'UR/SSR', name: cardName, css: 'rarity-ur' });
+                    gotUR = true; urName = cardName;
+                } else if (rand < pool.urRate + pool.srRate) {
+                    const cardName = pool.srCards[Math.floor(Math.random() * pool.srCards.length)];
+                    results.push({ tier: 'SR/閃卡', name: cardName, css: 'rarity-sr' });
+                } else {
+                    const cardName = pool.rCards[Math.floor(Math.random() * pool.rCards.length)];
+                    results.push({ tier: 'N/R 普通', name: cardName, css: 'rarity-r' });
+                }
+            }
+
+            document.getElementById('disp-gacha-grid').innerHTML = results.map(item => `
+                <div class="gacha-card-item ${item.css}">
+                    <span class="gacha-badge">${item.tier}</span>
+                    <span>${item.name}</span>
+                </div>
+            `).join('');
+
+            updateGachaStatsDisplay();
+
+            if (gotUR) {
+                log(`[${pool.title}] ✨ 抽中【${urName}】！但花了 $${pool.cost} 且無法當現金還債！`, 'warning');
+            } else {
+                log(`[${pool.title}] 花費 $${pool.cost} 進行 ${pool.pulls} 連抽，全是普通廢卡！`, 'danger');
+                state.health = Math.max(0, state.health - 2);
+            }
+            updateUI();
+        }
+
+        // --- 8. 借款與獨立還款系統 ---
+        function takeLoan() {
+            if (state.isDead) {
+                alert('此帳號已死亡，無法借款！');
+                return;
+            }
+            const type = document.getElementById('loan-type').value;
+            const amount = parseInt(document.getElementById('loan-amount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('請輸入有效的借款金額！');
+                return;
+            }
+
+            if (type === 'bank') {
+                if (state.bankLoan + amount > 5000) {
+                    alert(`銀行審核拒絕：信用評分過低，銀行總貸款額度上限為 $5,000（目前尚可借 $${Math.max(0, 5000 - state.bankLoan).toLocaleString()}）。`);
+                    return;
+                }
+                state.bankLoan += amount;
+                state.cash += amount;
+                log(`[貸款] 向銀行借款 $${amount.toLocaleString()} (日利息 0.5%)`, 'warning');
+            } else {
+                state.sharkLoan += amount;
+                state.cash += amount;
+                state.health = Math.max(0, state.health - 20);
+                log(`[⚠️高利貸] 簽約地下錢莊借款 $${amount.toLocaleString()}！日利息 10% 每日複利滾算！`, 'danger');
+            }
+            updateUI();
+        }
+
+        function repayLoan(mode) {
+            if (state.isDead) {
+                alert('此帳號已死亡，無法進行還款！');
+                return;
+            }
+            const type = document.getElementById('repay-type').value;
+            const currentDebt = type === 'shark' ? state.sharkLoan : state.bankLoan;
+            const targetName = type === 'shark' ? '地下錢莊高利貸' : '正則銀行貸款';
+
+            if (currentDebt <= 0) {
+                alert(`您目前沒有任何【${targetName}】欠款需要償還！`);
+                return;
+            }
+
+            if (state.cash <= 0) {
+                alert('您目前手頭沒有任何現金可以還款！');
+                return;
+            }
+
+            let payAmount = 0;
+            if (mode === 'full') {
+                payAmount = Math.min(state.cash, currentDebt);
+            } else if (mode === 'half_cash') {
+                const halfCash = Math.max(1, Math.floor(state.cash * 0.5));
+                payAmount = Math.min(halfCash, currentDebt);
+            } else {
+                const inputVal = parseInt(document.getElementById('repay-amount').value);
+                if (isNaN(inputVal) || inputVal <= 0) {
+                    alert('請輸入有效的還款金額！');
+                    return;
+                }
+                if (inputVal > state.cash) {
+                    alert(`現金不足！您目前只有 $${state.cash.toLocaleString()} 現金。`);
+                    return;
+                }
+                payAmount = Math.min(inputVal, currentDebt);
+            }
+
+            state.cash -= payAmount;
+            if (type === 'shark') {
+                state.sharkLoan -= payAmount;
+                state.health = Math.min(state.maxHealth, state.health + 5);
+                if (state.sharkLoan === 0) {
+                    state.health = Math.min(state.maxHealth, state.health + 10);
+                    log(`[✅清償高利貸] 支付 $${payAmount.toLocaleString()}，終於徹底還清地下錢莊高利貸！精神壓力大幅減輕！`, 'success');
+                } else {
+                    log(`[💳償還高利貸] 償還地下錢莊 $${payAmount.toLocaleString()}，剩餘欠款 $${state.sharkLoan.toLocaleString()}（提醒：剩餘欠款仍以每日 10% 複利計算）`, 'success');
+                }
+            } else {
+                state.bankLoan -= payAmount;
+                state.health = Math.min(state.maxHealth, state.health + 2);
+                if (state.bankLoan === 0) {
+                    log(`[✅清償銀行貸款] 支付 $${payAmount.toLocaleString()}，已全額還清正則銀行貸款！`, 'success');
+                } else {
+                    log(`[💳償還銀行貸款] 償還銀行 $${payAmount.toLocaleString()}，剩餘欠款 $${state.bankLoan.toLocaleString()}`, 'success');
+                }
+            }
+
+            updateUI();
+        }
+
+        function nextDay() {
+            if (state.isDead) {
+                alert('此帳號已死亡！');
+                return;
+            }
+            state.day++;
+            const bankInt = Math.floor(state.bankLoan * 0.005);
+            const sharkInt = Math.floor(state.sharkLoan * 0.10);
+
+            state.bankLoan += bankInt;
+            state.sharkLoan += sharkInt;
+
+            log(`[每日結算] 銀行利息 +$${bankInt}，高利貸複利 +$${sharkInt}`, 'warning');
+
+            if (state.soldOrgans && state.soldOrgans.length > 0) {
+                let organDrain = 0;
+                state.soldOrgans.forEach(id => {
+                    const org = organCatalog.find(o => o.id === id);
+                    if (org) organDrain += org.dailyHealthDrain;
+                });
+                if (organDrain > 0) {
+                    state.health = Math.max(0, state.health - organDrain);
+                    log(`[🩸身體殘缺折磨] 因黑市手術後遺症與器官功能缺失，每日身心健康額外流失 -${organDrain}%！`, 'danger');
+                }
+            }
+
+            if (state.sharkLoan > 0) {
+                state.health = Math.max(0, state.health - 15);
+                log(`[⚠️黑道追債] 地下錢莊登門威脅討債，心理健康值大幅下降！`, 'danger');
+            }
+            if (state.health === 0 && !state.isDead) {
+                log(`[🚨身心崩潰警報] 您的身心健康值已降至 0%，長期處於極度折磨與催債恐懼之中！`, 'danger');
+            }
+            updateUI();
+        }
+
+        window.onload = function() {
+            initSportsDropdowns();
+            initBballDropdowns();
+            initLotteryGrid();
+            updateGachaPoolInfo();
+        };
+    </script>
+</body>
+</html>
